@@ -10,20 +10,68 @@ function sendProgress($progress, $message) {
     flush();
 }
 
-// Parametreleri al
+if (!isset($_POST['payload'])) {
+    http_response_code(400);
+    sendProgress(0, "payload yok");
+    // die(json_encode(['ok' => false, 'msg' => 'payload yok']));
+}
+
+$decoded = base64_decode($_POST['payload']);
+if ($decoded === false) {
+    http_response_code(400);
+    sendProgress(0, "base64 decode hatası");
+    // die(json_encode(['ok' => false, 'msg' => 'base64 decode hatası']));
+}
+
+// DecodeURIComponent inverse (JS tarafında encodeURIComponent+unescape kullandıysak)
+$decoded = rawurldecode($decoded); // genelde gerekmez; eğer sorun olursa deneyin
+
+// JSON parse
+$data = json_decode($decoded, true);
+if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
+    http_response_code(400);
+    sendProgress(0, "JSON parse hatası: " . json_last_error_msg());
+    // die(json_encode(['ok' => false, 'msg' => 'JSON parse hatası: ' . json_last_error_msg()]));
+}
+
+// Normalleştirme: 'tables' veya 'tables[]' varyasyonlarını kontrol et
+// (JS tarafında biz cleanKey kullandık, ama burada ek kontrol koymak zarar vermez)
+if (isset($data['tables']) && !is_array($data['tables'])) {
+    // tek seçili ise string gelebilir; tek elemanlı diziye çevir
+    $data['tables'] = [$data['tables']];
+}
+if (isset($data['views']) && !is_array($data['views'])) {
+    $data['views'] = [$data['views']];
+}
+
+// Parametreleri al v.1
+/*
 $src_host = $_POST['src_host'] ?? '';
 $src_user = $_POST['src_user'] ?? '';
 $src_pass = $_POST['src_pass'] ?? '';
 $src_db   = $_POST['src_db'] ?? '';
-
 $dest_host = $_POST['dest_host'] ?? '';
 $dest_user = $_POST['dest_user'] ?? '';
 $dest_pass = $_POST['dest_pass'] ?? '';
 $dest_db   = $_POST['dest_db'] ?? '';
-
 $tables = $_POST['tables'] ?? [];
 $views  = $_POST['views'] ?? [];
 $drop_existing = isset($_POST['drop_existing']);
+*/
+
+// Hedef DB bağlantısı parametreleri al
+$src_host = $data['src_host'] ?? '';
+$src_user = $data['src_user'] ?? '';
+$src_pass = $data['src_pass'] ?? '';
+$src_db   = $data['src_db'] ?? '';
+$dest_host = $data['dest_host'] ?? '';
+$dest_user = $data['dest_user'] ?? '';
+$dest_pass = $data['dest_pass'] ?? '';
+$dest_db   = $data['dest_db'] ?? '';
+$tables = $data['tables'] ?? [];
+$views  = $data['views'] ?? [];
+$drop_existing = isset($data['drop_existing']) ?? false;
+
 
 // Bağlantılar
 try {
@@ -52,7 +100,6 @@ $done = 0;
 // --- 1) Tabloları oluştur ve veriyi kopyala ---
 foreach ($tables as $t) {
     $done++;
-
     try {
         // CREATE TABLE al
         $row = $src->query("SHOW CREATE TABLE `$t`")->fetch(PDO::FETCH_ASSOC);
@@ -62,21 +109,24 @@ foreach ($tables as $t) {
         $createSQL_noFK = preg_replace('/,\s*CONSTRAINT\s+[`"\w]+\s+FOREIGN KEY\s*\([^\)]+\)\s+REFERENCES\s+[^\)]+\)\s*(ON DELETE [A-Z ]+)?\s*(ON UPDATE [A-Z ]+)?/mi', '', $createSQL);
         //$createSQL_noFK = preg_replace('/,\n\s*FOREIGN KEY.*?$/m', '', $createSQL_noFK);
 
-        if ($drop_existing) {
+        if ($drop_existing==true) {
             $dest->exec("DROP TABLE IF EXISTS `$t`");
+            sendProgress(intval($done/$total*100), "Tablo silindi:<b>". $t ."</b>");
+        } else {
+            $dest->exec("CREATE TABLE IF NOT EXISTS `$t` LIKE $t");
         }
         $dest->exec($createSQL_noFK);
-        sendProgress(intval($done/$total*100), "Tablo oluşturuldu: $t");
+        sendProgress(intval($done/$total*100), "Tablo oluşturuldu:<b>". $t ."</b>");
 
         // Verileri kopyala
-        $rows = $src->query("SELECT * FROM `$t`", PDO::FETCH_ASSOC);
+        $rows = $src->query("SELECT * FROM `$t`", PDO::FETCH_ASSOC);        
         foreach ($rows as $r) {
             $cols = array_map(fn($c) => "`$c`", array_keys($r));
             $vals = array_map(fn($v) => $dest->quote($v), array_values($r));
             $sql = "INSERT INTO `$t` (" . implode(",", $cols) . ") VALUES (" . implode(",", $vals) . ")";
             $dest->exec($sql);
         }
-        sendProgress(intval($done/$total*100), "Veriler kopyalandı: $t");
+        sendProgress(intval($done/$total*100), "Veriler kopyalandı:<b>". $t ."</b> Toplam: <b>". $rows->rowCount() . "</b> kayıt.");
 
     } catch (Exception $e) {
         sendProgress(intval($done/$total*100), "Hata ($t): " . $e->getMessage());
@@ -85,6 +135,7 @@ foreach ($tables as $t) {
 
 // --- 2) Foreign key constraint’leri ekle ---
 foreach ($tables as $t) {
+    $done++;
     try {
         $row = $src->query("SHOW CREATE TABLE `$t`")->fetch(PDO::FETCH_ASSOC);
         $createSQL = $row['Create Table'];
@@ -95,6 +146,7 @@ foreach ($tables as $t) {
                 $sql = "ALTER TABLE `$t` ADD $constr";
                 try {
                     $dest->exec($sql);
+                    sendProgress(100, "Foreign key eklendi:<b>". $t ."</b>");
                 } catch (Exception $ex) {
                     sendProgress(100, "Foreign key eklenemedi ($t): " . $ex->getMessage());
                 }
@@ -110,15 +162,14 @@ foreach ($views as $v) {
     $done++;
     try {
         $row = $src->query("SHOW CREATE VIEW `$v`")->fetch(PDO::FETCH_ASSOC);
-        $createSQL = $row['Create View'];
+        $createView = $row['Create View'];
 
-        if ($drop_existing) {
+        if ($drop_existing==true) {
             $dest->exec("DROP VIEW IF EXISTS `$v`");
+            sendProgress(intval($done/$total*100), "View silindi:<b>". $v ."</b>");
         }
-
-        $dest->exec($createSQL);
-        sendProgress(intval($done/$total*100), "View oluşturuldu: $v");
-
+        $dest->exec($createView);
+        sendProgress(intval($done/$total*100), "View oluşturuldu:<b>". $v ."</b>");
     } catch (Exception $e) {
         sendProgress(intval($done/$total*100), "Hata (view $v): " . $e->getMessage());
     }
@@ -127,7 +178,7 @@ foreach ($views as $v) {
 // Foreign key check enable
 $dest->exec("SET FOREIGN_KEY_CHECKS=1");
 
-sendProgress(100, "Migration tamamlandı ✅");
+sendProgress(100, "Kopyalama (Migration) tamamlandı ✅");
 
 exit;
 ?>
