@@ -1,5 +1,5 @@
 <?php
-$filename = $_GET['file'] ?? '';
+$filename = $_GET['file'] ? $_GET['file'] : '';
 $filepath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . basename($filename);
 
 if (!file_exists($filepath)) {

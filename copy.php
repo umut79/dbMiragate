@@ -45,32 +45,18 @@ if (isset($data['views']) && !is_array($data['views'])) {
 }
 
 // Parametreleri al v.1
-/*
-$src_host = $_POST['src_host'] ?? '';
-$src_user = $_POST['src_user'] ?? '';
-$src_pass = $_POST['src_pass'] ?? '';
-$src_db   = $_POST['src_db'] ?? '';
-$dest_host = $_POST['dest_host'] ?? '';
-$dest_user = $_POST['dest_user'] ?? '';
-$dest_pass = $_POST['dest_pass'] ?? '';
-$dest_db   = $_POST['dest_db'] ?? '';
-$tables = $_POST['tables'] ?? [];
-$views  = $_POST['views'] ?? [];
-$drop_existing = isset($_POST['drop_existing']);
-*/
-
 // Hedef DB bağlantısı parametreleri al
-$src_host = $data['src_host'] ?? '';
-$src_user = $data['src_user'] ?? '';
-$src_pass = $data['src_pass'] ?? '';
-$src_db   = $data['src_db'] ?? '';
-$dest_host = $data['dest_host'] ?? '';
-$dest_user = $data['dest_user'] ?? '';
-$dest_pass = $data['dest_pass'] ?? '';
-$dest_db   = $data['dest_db'] ?? '';
-$tables = $data['tables'] ?? [];
-$views  = $data['views'] ?? [];
-$drop_existing = isset($data['drop_existing']) ?? false;
+$src_host = $data['src_host'] ? $data['src_host'] : '';
+$src_user = $data['src_user'] ? $data['src_user'] : '';
+$src_pass = $data['src_pass'] ? $data['src_pass'] : '';
+$src_db   = $data['src_db'] ? $data['src_db'] : '';
+$dest_host = $data['dest_host'] ? $data['dest_host'] : '';
+$dest_user = $data['dest_user'] ? $data['dest_user'] : '';
+$dest_pass = $data['dest_pass'] ? $data['dest_pass'] : '';
+$dest_db   = $data['dest_db'] ? $data['dest_db'] : '';
+$tables = $data['tables'] ? $data['tables'] : [];
+$views  = $data['views'] ? $data['views'] : [];
+$drop_existing = isset($data['drop_existing']) ? $data['drop_existing'] : false;
 
 
 // Bağlantılar

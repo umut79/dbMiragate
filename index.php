@@ -13,14 +13,14 @@ function strReplace($t)
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step']) && $_POST['step'] == 1) {
   // Kaynak DB bağlantısı
-  $src_host = $_POST['src_host'] ?? 'localhost';
-  $src_user = $_POST['src_user'] ?? '';
-  $src_pass = $_POST['src_pass'] ?? '';
-  $src_db   = $_POST['src_db'] ?? '';
+  $src_host = $_POST['src_host'] ? 'localhost' : '';
+  $src_user = $_POST['src_user'] ? $_POST['src_user'] : '';
+  $src_pass = $_POST['src_pass'] ? $_POST['src_pass'] :'';
+  $src_db   = $_POST['src_db'] ? $_POST['src_db'] :'';
 
   $src_equal_dest = isset($_POST['db_settings_equal']) ? 1 : 0;
   if (isset($src_equal_dest)) {
-    $dest_db_prefix = $_POST['dest_db_prefix'] ?? '';
+    $dest_db_prefix = $_POST['dest_db_prefix'] ? $_POST['dest_db_prefix'] :'';
     switch ($dest_db_prefix) {
       case 'date':
         $dest_db = $src_db . '_' . date('Ymd');

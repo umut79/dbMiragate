@@ -3,14 +3,21 @@ header('Content-Type: text/plain; charset=utf-8');
 header('Cache-Control: no-cache');
 header('X-Accel-Buffering: no');
 
+@error_reporting(E_ALL & ~E_NOTICE);
+ini_set('memory_limit', '512M');
+@ini_set('display_errors', 1);
+@ini_set('error_reporting', 1);
+
+
+
 function sendProgress($progress, $message, $extra = [])
 {
   echo json_encode(array_merge([
     'progress' => $progress,
     'message'  => $message
   ], $extra)) . "\n";
-  ob_flush();
-  flush();
+  // ob_flush();
+  // flush();
 }
 
 if (!isset($_POST['payload'])) {
@@ -48,13 +55,13 @@ if (isset($data['views']) && !is_array($data['views'])) {
 }
 
 // Parametreler v.2
-$src_host = $data['src_host'] ?? '';
-$src_user = $data['src_user'] ?? '';
-$src_pass = $data['src_pass'] ?? '';
-$src_db   = $data['src_db'] ?? '';
-$tables = $data['tables'] ?? [];
-$views  = $data['views'] ?? [];
-$drop_existing = isset($data['drop_existing']) ?? false;
+$src_host = $data['src_host'] ? $data['src_host'] :'';
+$src_user = $data['src_user'] ? $data['src_user'] :'';
+$src_pass = $data['src_pass'] ? $data['src_pass'] :'';
+$src_db   = $data['src_db'] ? $data['src_db'] :'';
+$tables = $data['tables'] ? $data['tables'] : [];
+$views  = $data['views'] ? $data['views'] : [];
+$drop_existing = isset($data['drop_existing']) ? $data['drop_existing'] : false;
 
 
 // Parametreler v.1
@@ -134,7 +141,13 @@ foreach ($tables as $t) {
     // $output[] = "-- ". $t ." tablosunda ". $stmt->rowCount() . " kayıt var.\n";
     $batch = [];
     foreach ($stmt as $r) {
-      $vals = array_map(fn($v) => $pdo->quote($v), array_values($r));
+      // $vals = array_map(fn($v) => $pdo->quote($v), array_values($r)); // sunucu uyumluluk sorunu
+      // Bu bölüm MEB sunucuda hata verdiği için değiştirldi
+      $pdo_instance = $pdo; // $pdo'yu closure içine dahil etmek için kopyalıyoruz
+      $vals = array_map(function ($v) use ($pdo_instance) {
+        return $pdo_instance->quote($v);
+      }, array_values($r));
+
       $batch[] = "(" . implode(",", $vals) . ")";
       if (count($batch) >= $batch_size) {
         fwrite($f, "INSERT INTO `$t` VALUES " . implode(",\n", $batch) . ";\n");
