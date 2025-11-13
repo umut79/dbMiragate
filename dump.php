@@ -1,8 +1,10 @@
 <?php
+@error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 session_start();
 if ($_SESSION['login'] != true) {
   http_response_code(403);
-  echo "<script>console.error('403')</script>";
+  echo "<script>console.error('403 Unauthorized Access');</script>";
+  echo "<p style='color:red'>403 Unauthorized Access</p>";
   exit;
 }
 // JSON satırlarını anlık gönderebilmek için
@@ -10,7 +12,6 @@ header('Content-Type: text/plain; charset=utf-8');
 header('Cache-Control: no-cache');
 header('X-Accel-Buffering: no');
 
-@error_reporting(E_ALL & ~E_NOTICE);
 ini_set('memory_limit', '512M');
 @ini_set('display_errors', 1);
 @ini_set('error_reporting', 1);
