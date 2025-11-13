@@ -12,9 +12,14 @@ if($_SERVER['HTTP_HOST'] != 'localhost' && $_SERVER['HTTP_HOST'] != '127.0.0.1')
 
 require_once "cfg.php"; // settings config
 
-$password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
 $step     = filter_input(INPUT_POST, 'step', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
 $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+if($_GET['step'] === 'logout') {
+  unset($_SESSION['login']);
+  unset($_SESSION['username']);
+}
 
 if($step == 'login') {
   if($username === $user && $password === $pass) {
@@ -46,7 +51,19 @@ function strReplace($t)
   </head>
   <body class="container-fluid container-lg py-4">
 
-    <h2 class="mb-4"><?= $appName ?> <small class="text-muted fs-6">(<?= $appVersion ?>)</small></h2>
+    <h4 class="mb-4"><?= $appName ?> <small class="text-muted fs-6">(<?= $appVersion ?>)</small>
+    <?php 
+    if($_SESSION['login'] == true) {
+      echo "<div class='float-end h6'><span class='text-success'>[" . $_SESSION['username'] . "]</span>
+              <form method='post' action='' id='logoutForm' style='display:inline;'>
+              <input type='hidden' name='step' value='logout'>
+              <button type='submit' class='btn btn-sm p-1 btn-danger' role='button' id='logout'>Çıkış</button>
+              </form>
+              </div>";
+    }
+      
+      ?>
+    </h4>
   <?php
 
 if($_SESSION['login'] == true) {
