@@ -1,4 +1,11 @@
 <?php
+session_start();
+if ($_SESSION['login'] != true) {
+  http_response_code(403);
+  echo "<script>console.error('403')</script>";
+  exit;
+}
+// JSON satırlarını anlık gönderebilmek için
 header('Content-Type: text/plain; charset=utf-8');
 header('Cache-Control: no-cache');
 header('X-Accel-Buffering: no');

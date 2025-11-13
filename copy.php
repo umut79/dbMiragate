@@ -1,8 +1,15 @@
 <?php
+session_start();
+if($_SESSION['login'] != true) {
+    http_response_code(403);
+    echo "<script>console.error('403')</script>";
+    exit;
+}
 // JSON satırlarını anlık gönderebilmek için
 header('Content-Type: text/plain; charset=utf-8');
 header('Cache-Control: no-cache');
 header('X-Accel-Buffering: no'); // nginx için
+error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING); 
 
 function sendProgress($progress, $message) {
     echo json_encode(['progress' => $progress, 'message' => $message]) . "\n";
@@ -54,8 +61,8 @@ $dest_host = $data['dest_host'] ? $data['dest_host'] : '';
 $dest_user = $data['dest_user'] ? $data['dest_user'] : '';
 $dest_pass = $data['dest_pass'] ? $data['dest_pass'] : '';
 $dest_db   = $data['dest_db'] ? $data['dest_db'] : '';
-$tables = $data['tables'] ? $data['tables'] : [];
-$views  = $data['views'] ? $data['views'] : [];
+$tables = $data['tables'] ? $data['tables'] : null;
+$views  = $data['views'] ? $data['views'] : null;
 $drop_existing = isset($data['drop_existing']) ? $data['drop_existing'] : false;
 
 

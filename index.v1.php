@@ -35,19 +35,6 @@ function strReplace($t)
 }
 
 // page start
-?> 
-<!DOCTYPE html>
-  <html lang="tr">
-
-  <head>
-    <meta charset="UTF-8">
-    <title><?= $appName ?> | <?= $appVersion ?></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  </head>
-  <body class="container-fluid container-lg py-4">
-
-    <h2 class="mb-4"><?= $appName ?> <small class="text-muted fs-6">(<?= $appVersion ?>)</small></h2>
-  <?php
 
 if($_SESSION['login'] == true) {
 
@@ -99,6 +86,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step']) && $_POST['st
 
 
 ?>
+  <!DOCTYPE html>
+  <html lang="tr">
+
+  <head>
+    <meta charset="UTF-8">
+    <title><?= $appName ?> | <?= $appVersion ?></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body class="container-fluid container-lg py-4">
+
+    <h2 class="mb-4"><?= $appName ?> <small class="text-muted fs-6">(<?= $appVersion ?>)</small></h2>
+
     <form method="post" action="" id="migrationForm">
       <!-- Kaynak DB bilgileri -->
       <input type="hidden" name="src_host" value="<?= htmlspecialchars($src_host) ?>">
@@ -350,10 +349,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step']) && $_POST['st
         read();
       }
     </script>
+
+
+  </body>
+  </html>
 <?php
   exit;
 } // step 2 end
 ?>
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title><?= $appName ?> | <?= $appVersion ?></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container-fluid container-lg py-4">
+  <h2 class="mb-4"><?= $appName ?> <small class="text-muted fs-6">(<?= $appVersion ?>)</small></h2>
   <div class="card">
     <div class="card-header bg-primary text-white">Veritabanı Bağlantısı</div>
     <div class="card-body">
@@ -415,6 +428,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step']) && $_POST['st
       </form>
     </div>
   </div>
+</body>
 <script>
   const customInput = document.getElementById("dest_db_prefix_text");
   const radios = document.querySelectorAll("input[name=dest_db_prefix]");
@@ -431,9 +445,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step']) && $_POST['st
   toggleCustomInput();
   radios.forEach(r => r.addEventListener("change", toggleCustomInput));
 </script>
+
+</html>
 <?php
-} else { // login
-  ?>
+} else {
+
+?>
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <title><?= $appName ?> | <?= $appVersion ?></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="container-fluid container-lg py-4">
+  <h2 class="mb-4"><?= $appName ?> <small class="text-muted fs-6">(<?= $appVersion ?>)</small></h2>
   <div class="card">
     <div class="card-header bg-danger text-white">Giriş Yap</div>
     <div class="card-body">
@@ -455,8 +483,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step']) && $_POST['st
       </form>
     </div>
   </div>
+</body>
+</html>
 <?php
 } // login
 ?>
-</body>
-</html>
