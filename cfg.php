@@ -1,5 +1,5 @@
 <?php 
 // settings
 $user = "umutacikgoz";
-$pass = "Ua+4c1k602";
+$pass = "U+4c1k602";
 ?>
